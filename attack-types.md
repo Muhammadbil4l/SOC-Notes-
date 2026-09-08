@@ -1,50 +1,62 @@
-SOC Analyst Notes and Playbooks
+SOC Analyst Attack Reference Guide
 
-Hi, I am Bilal. I am a final-year Software Engineering student at MUET SZAB Campus, Khairpur Mirs, targeting entry-level SOC Analyst roles. I am passionate about Defensive Security and Blue Teaming.
+This document provides a quick overview of common cyber attacks, their root causes, and the immediate actions a SOC analyst should take.
 
-This repository contains my practical notes, cheat sheets, and technical playbooks for log analysis, network security, and incident response. It serves as my personal knowledge base to prepare for interviews and daily SOC operations.
+1. ARP Spoofing (Layer 2)
 
-Skills and Technologies
+What it is: The attacker sends fake ARP replies claiming to be the default gateway. All traffic is redirected to the attacker (Man-in-the-Middle).
+Root Cause: ARP protocol lacks authentication.
+Detection: Duplicate MAC addresses claiming to be the gateway IP.
+SOC Action: Isolate the affected victim machine immediately. Enable Dynamic ARP Inspection (DAI) on the network switch.
 
-Security and Networking:
-Log analysis fundamentals, alert triage concepts, network forensics, packet analysis (Wireshark), and TCP/IP protocol suite.
+2. IP Spoofing (Layer 3)
 
-Tools:
-Kali Linux, Wireshark, Nmap, ZMap, Splunk (learning), Wazuh (learning), and Windows Event Viewer.
+What it is: The attacker manipulates the source IP address in packet headers to hide their identity or impersonate another device.
+Root Cause: Routers do not verify the source IP address by default.
+Detection: Internal network traffic showing external source IPs.
+SOC Action: Implement Ingress and Egress filtering on firewalls to block packets with mismatched source addresses.
 
-Scripting:
-Python (automation, data pipelines) and Bash basics.
+3. SYN Flood (Layer 4)
 
-Practical Experience and Projects
+What it is: The attacker sends thousands of SYN requests (TCP handshake initiations) but never completes the ACK. The server's resources are exhausted.
+Root Cause: TCP reserves resources for half-open connections.
+Detection: High volume of SYN_RECV connections in netstat output.
+SOC Action: Enable SYN Cookies on the operating system. Activate rate limiting on the firewall.
 
-Cybersecurity Intern at Hacktify Cyber Security (Remote):
-Completed hands-on CTF challenges across web exploitation, OSINT, and network forensics.
-Performed network scanning and host/IP reconnaissance using Nmap and Kali Linux in simulated environments.
+4. SQL Injection (Layer 7)
 
-DNS Encryption Security Research (Final Year Project):
-Co-authored a study assessing the security posture of encrypted DNS resolvers (DoH/DoT).
-Built a data pipeline to detect TLS misconfigurations, weak cipher suites, and missing HTTP security headers.
+What it is: Malicious SQL code (e.g., ' OR '1'='1) is inserted into application input fields to manipulate the backend database.
+Root Cause: Lack of input validation and sanitization by developers.
+Detection: WAF logs showing SQL keywords like "union select" or "or 1=1".
+SOC Action: Flag the request to the development team. Implement Web Application Firewall (WAF) rules to block suspicious patterns.
 
-Network Simulation Project:
-Designed multi-node network topologies with IP addressing and routing protocols.
-Implemented measures to protect packet integrity and confidentiality in transit.
+5. Phishing (Layer 7)
 
-Repository Contents
+What it is: A social engineering attack where an attacker sends fraudulent communications (emails/SMS) to trick users into revealing sensitive information.
+Root Cause: Human trust and urgency are exploited.
+Detection: Reports from users of suspicious emails. Mismatch in "From" and "Reply-To" email headers.
+SOC Action: Block the malicious domain/URL. Reset passwords for any users who clicked. Enforce Multi-Factor Authentication (MFA).
 
-attack-types.md: 8 Major Cyber Attacks explained with SOC response actions.
-windows-logs.md: Windows Event IDs (4624, 4625, 4720) and their significance.
-linux-commands.md: Essential Linux commands (grep, awk, tail) for log analysis.
-nmap-cheatsheet.md: Common Nmap scanning techniques and use cases.
+6. XSS (Cross-Site Scripting)
 
-More files will be added as I continue learning.
+What it is: Malicious JavaScript code is injected into a trusted website (e.g., in comment boxes). This script runs in other users' browsers and steals session cookies.
+Root Cause: Improper output encoding and input sanitization.
+Detection: WAF alerts for HTML script tags (like script, onerror).
+SOC Action: Block the suspicious request. Advise the web development team to implement Content Security Policy (CSP).
 
-My Goal
+7. Weak SSL/TLS Exploits
 
-To secure an Entry-Level SOC Analyst (L1) or Defensive Security role where I can monitor, detect, and respond to cyber threats in real-time.
+What it is: Servers running outdated protocols like SSL 2.0, SSL 3.0, or TLS 1.0 are vulnerable to downgrade attacks and data decryption.
+Root Cause: Poor patching and backward compatibility enabled.
+Detection: Vulnerability scanners reporting deprecated TLS versions.
+SOC Action: Immediately disable insecure protocols on the server. Enforce TLS 1.2 or 1.3 only.
 
-Connect with Me
+8. Session Hijacking
 
-LinkedIn: linkedin.com/in/muhammad-bilal-5072ba261
-GitHub: github.com/Muhammadbil4l
+What it is: The attacker steals a user's session ID/cookie and impersonates them to gain unauthorized access to an application.
+Root Cause: Session IDs transmitted over unencrypted HTTP or stolen via XSS.
+Detection: Same session ID being used from two different geographic locations simultaneously.
+SOC Action: Immediately invalidate (kill) the active session. Force a password reset for the user.
 
-Defense in Depth because one layer of security is never enough.
+The Golden Rule
+Every major attack exploits a form of trust. ARP trusts MAC addresses, IP trusts source addresses, and SQLi trusts user input. As a SOC analyst, our job is to remove blind trust through strict verification and monitoring.
